@@ -6,23 +6,25 @@ const path = require("path");
 const app = express();
 app.use(express.json());
 
-// Global browser instance for reuse
-let browser;
-
 async function getBrowser() {
   if (!browser) {
-    console.log("Launching Chromium browser...");
-    browser = await chromium.launch({
-      headless: true,
-      args: [
-        "--no-sandbox",
-        "--disable-setuid-sandbox",
-        "--disable-dev-shm-usage",
-        "--disable-gpu",
-        "--single-process"
-      ]
-    });
-    console.log("Browser launched successfully");
+    try {
+      console.log("Launching Chromium...");
+      browser = await chromium.launch({
+        headless: true,
+        args: [
+          "--no-sandbox",
+          "--disable-setuid-sandbox",
+          "--disable-dev-shm-usage",
+          "--disable-gpu",
+          "--single-process"
+        ]
+      });
+      console.log("Browser launched successfully");
+    } catch (err) {
+      console.error("Failed to launch Chromium:", err.stack || err);
+      throw err;
+    }
   }
   return browser;
 }
