@@ -1,5 +1,5 @@
 # Use official Node.js LTS slim image
-FROM node:20-slim
+FROM mcr.microsoft.com/playwright:v1.41.0-focal
 
 # Set working directory
 WORKDIR /app
