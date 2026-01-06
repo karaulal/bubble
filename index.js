@@ -6,7 +6,10 @@ const path = require("path");
 const app = express();
 app.use(express.json());
 
+// Global browser instance
+let browser;
 
+// Launch or reuse Chromium
 async function getBrowser() {
   if (!browser) {
     try {
@@ -31,13 +34,8 @@ async function getBrowser() {
 }
 
 app.post("/screenshot", async (req, res) => {
-  try {
-    const browserInstance = await getBrowser();  // <-- always use this
-    const page = await browserInstance.newPage();
-    
-  }
-
   const { url } = req.body;
+
   if (!url) {
     console.log("ERROR: No URL provided in request body");
     return res.status(400).send("Missing url");
@@ -60,7 +58,7 @@ app.post("/screenshot", async (req, res) => {
     });
     console.log("Screenshot captured, size:", buffer.length, "bytes");
 
-    // Save screenshot locally (optional, ephemeral in Cloud Run)
+    // Save locally (optional, ephemeral on Cloud Run)
     const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
     const filename = path.join(__dirname, `screenshot-${timestamp}.png`);
     fs.writeFileSync(filename, buffer);
