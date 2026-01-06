@@ -7,6 +7,7 @@ const path = require("path");
 
 const app = express();
 app.use(express.json());
+await page.waitForSelector(".db-loaded", { timeout: 12000 });
 
 app.post("/screenshot", async (req, res) => {
   const { url } = req.body;
