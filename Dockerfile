@@ -27,6 +27,11 @@ RUN apt-get update && apt-get install -y \
 RUN npm install -g playwright
 RUN npx playwright install chromium
 
+# Install emoji fonts
+RUN apt-get update && apt-get install -y \
+    fonts-noto-color-emoji \
+    && rm -rf /var/lib/apt/lists/*
+    
 WORKDIR /app
 COPY package.json package-lock.json* ./
 RUN npm install
