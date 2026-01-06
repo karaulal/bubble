@@ -1,40 +1,44 @@
 FROM node:22-slim
 
-# Install dependencies for Chromium
+# Install system dependencies for Chromium
 RUN apt-get update && apt-get install -y \
-    wget \
     ca-certificates \
     fonts-liberation \
+    fonts-noto-color-emoji \
     libasound2 \
     libatk-bridge2.0-0 \
     libatk1.0-0 \
     libcups2 \
     libdrm2 \
-    libxkbcommon0 \
-    libxcomposite1 \
-    libxdamage1 \
-    libxrandr2 \
     libgbm1 \
-    libpango-1.0-0 \
-    libnss3 \
-    libxshmfence1 \
     libglib2.0-0 \
     libgtk-3-0 \
+    libnss3 \
+    libpango-1.0-0 \
+    libxcomposite1 \
+    libxdamage1 \
+    libxkbcommon0 \
+    libxrandr2 \
+    libxshmfence1 \
+    wget \
     --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Playwright and Chromium
-RUN npm install -g playwright
+WORKDIR /app
+
+# Copy package files first (better cache)
+COPY package.json package-lock.json* ./
+
+# Install Node dependencies (including Playwright)
+RUN npm install
+
+# Force Playwright browsers into node_modules
+ENV PLAYWRIGHT_BROWSERS_PATH=0
+
+# Install Chromium for the LOCAL Playwright version
 RUN npx playwright install chromium
 
-# Install emoji fonts
-RUN apt-get update && apt-get install -y \
-    fonts-noto-color-emoji \
-    && rm -rf /var/lib/apt/lists/*
-    
-WORKDIR /app
-COPY package.json package-lock.json* ./
-RUN npm install
+# Copy application code
 COPY . .
 
 EXPOSE 8080
