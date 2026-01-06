@@ -1,15 +1,3 @@
-browser = await chromium.launch({
-  headless: true,
-  args: [
-    "--no-sandbox",
-    "--disable-setuid-sandbox",
-    "--disable-dev-shm-usage",
-    "--disable-gpu",
-    "--single-process"
-  ]
-});
-
-
 const express = require("express");
 const { chromium } = require("playwright");
 const fs = require("fs");
@@ -17,6 +5,27 @@ const path = require("path");
 
 const app = express();
 app.use(express.json());
+
+// Lazy global browser instance
+let browser;
+
+async function getBrowser() {
+  if (!browser) {
+    console.log("Launching Chromium browser...");
+    browser = await chromium.launch({
+      headless: true,
+      args: [
+        "--no-sandbox",
+        "--disable-setuid-sandbox",
+        "--disable-dev-shm-usage",
+        "--disable-gpu",
+        "--single-process"
+      ]
+    });
+    console.log("Browser launched successfully");
+  }
+  return browser;
+}
 
 app.post("/screenshot", async (req, res) => {
   console.log("===== New Screenshot Request =====");
@@ -30,15 +39,9 @@ app.post("/screenshot", async (req, res) => {
 
   console.log("URL to screenshot:", url);
 
-  let browser;
   try {
-    console.log("Launching Chromium browser...");
-    browser = await chromium.launch({
-      args: ["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage"]
-    });
-    console.log("Browser launched successfully");
-
-    const page = await browser.newPage();
+    const browserInstance = await getBrowser();
+    const page = await browserInstance.newPage();
     console.log("New page created");
 
     console.log("Navigating to URL, waiting for network to be idle...");
@@ -55,18 +58,15 @@ app.post("/screenshot", async (req, res) => {
     fs.writeFileSync(filename, buffer);
     console.log("Screenshot saved locally as:", filename);
 
-    console.log("Closing browser...");
-    await browser.close();
-    console.log("Browser closed");
-
     console.log("Sending screenshot back to client...");
     res.set("Content-Type", "image/png");
     res.send(buffer);
     console.log("Response sent successfully");
     console.log("===== Request Complete =====\n");
+
+    await page.close();
   } catch (error) {
-    console.error("ERROR during screenshot process:", error);
-    if (browser) await browser.close();
+    console.error("ERROR during screenshot process:", error.stack || error);
     res.status(500).send("Failed to take screenshot");
   }
 });
