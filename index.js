@@ -6,7 +6,7 @@ const path = require("path");
 const app = express();
 app.use(express.json());
 
-// Lazy global browser instance
+// Global browser instance for reuse
 let browser;
 
 async function getBrowser() {
@@ -48,11 +48,13 @@ app.post("/screenshot", async (req, res) => {
     await page.goto(url, { waitUntil: "networkidle", timeout: 60000 });
     console.log("Page loaded successfully");
 
-    console.log("Taking full-page screenshot...");
-    const buffer = await page.screenshot({ fullPage: true });
+    console.log("Taking screenshot (540x750)...");
+    const buffer = await page.screenshot({
+      clip: { x: 0, y: 0, width: 540, height: 750 }
+    });
     console.log("Screenshot captured, size:", buffer.length, "bytes");
 
-    // Save screenshot locally with timestamp
+    // Optional: save locally (Cloud Run filesystem is ephemeral)
     const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
     const filename = path.join(__dirname, `screenshot-${timestamp}.png`);
     fs.writeFileSync(filename, buffer);
@@ -73,5 +75,5 @@ app.post("/screenshot", async (req, res) => {
 
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, "0.0.0.0", () => {
-  console.log(`Screenshot API running on port ${PORT}`);
+  console.log(`Screenshot API running on port ${PORT}, accessible externally`);
 });
