@@ -42,7 +42,7 @@ app.post("/screenshot", async (req, res) => {
     console.log("Page loaded successfully");
 
     // ✅ MOVED HERE — this is the ONLY change
-    await page.waitForSelector(".db-loaded", { timeout: 12000 });
+    await page.waitForSelector(".db-loaded", { timeout: 60000 });
 
     console.log("Taking screenshot (540x750)...");
     const buffer = await page.screenshot({
