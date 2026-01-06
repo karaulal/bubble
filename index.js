@@ -26,11 +26,7 @@ async function getBrowser() {
   }
   return browser;
 }
-# For a dict
-feeds = data.get('feeds')
-if feeds is None:
-    # handle missing feeds
-    print("Warning: 'feeds' key is missing")
+
 
 app.post("/screenshot", async (req, res) => {
   console.log("===== New Screenshot Request =====");
@@ -70,6 +66,12 @@ app.post("/screenshot", async (req, res) => {
     res.send(buffer);
     console.log("Response sent successfully");
     console.log("===== Request Complete =====\n");
+
+    # For a dict
+feeds = data.get('feeds')
+if feeds is None:
+    # handle missing feeds
+    print("Warning: 'feeds' key is missing")
 
     await page.close();
   } catch (error) {
