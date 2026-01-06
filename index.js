@@ -1,6 +1,5 @@
 console.log("Starting screenshot service...");
 
-
 const express = require("express");
 const { chromium } = require("playwright");
 const fs = require("fs");
@@ -8,33 +7,6 @@ const path = require("path");
 
 const app = express();
 app.use(express.json());
-
-// Global browser instance
-let browser;
-
-// Launch or reuse Chromium
-async function getBrowser() {
-  if (!browser) {
-    try {
-      console.log("Launching Chromium...");
-      browser = await chromium.launch({
-        headless: true,
-        args: [
-          "--no-sandbox",
-          "--disable-setuid-sandbox",
-          "--disable-dev-shm-usage",
-          "--disable-gpu",
-          "--single-process"
-        ]
-      });
-      console.log("Browser launched successfully");
-    } catch (err) {
-      console.error("Failed to launch Chromium:", err.stack || err);
-      throw err;
-    }
-  }
-  return browser;
-}
 
 app.post("/screenshot", async (req, res) => {
   const { url } = req.body;
@@ -46,9 +18,23 @@ app.post("/screenshot", async (req, res) => {
 
   console.log("URL to screenshot:", url);
 
+  let browser;
   try {
-    const browserInstance = await getBrowser();
-    const page = await browserInstance.newPage();
+    // Launch a fresh Chromium instance per request
+    console.log("Launching Chromium...");
+    browser = await chromium.launch({
+      headless: true,
+      args: [
+        "--no-sandbox",
+        "--disable-setuid-sandbox",
+        "--disable-dev-shm-usage",
+        "--disable-gpu",
+        "--single-process"
+      ]
+    });
+    console.log("Browser launched successfully");
+
+    const page = await browser.newPage();
     console.log("New page created");
 
     console.log("Navigating to URL, waiting for network to be idle...");
@@ -61,19 +47,26 @@ app.post("/screenshot", async (req, res) => {
     });
     console.log("Screenshot captured, size:", buffer.length, "bytes");
 
-    // Save locally (optional, ephemeral on Cloud Run)
+    // Optional: save locally (Cloud Run filesystem is ephemeral)
     const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
     const filename = path.join(__dirname, `screenshot-${timestamp}.png`);
     fs.writeFileSync(filename, buffer);
     console.log("Screenshot saved locally as:", filename);
 
+    // Send screenshot back to client
     res.set("Content-Type", "image/png");
     res.send(buffer);
     console.log("Response sent successfully");
 
     await page.close();
-    console.log("===== Request Complete =====\n");
+    await browser.close();
+    console.log("Browser closed, request complete\n");
   } catch (error) {
+    if (browser) {
+      try {
+        await browser.close();
+      } catch {}
+    }
     console.error("ERROR during screenshot process:", error.stack || error);
     res.status(500).send("Failed to take screenshot");
   }
