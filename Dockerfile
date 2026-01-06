@@ -1,24 +1,38 @@
-# Use official Node.js LTS slim image
-FROM mcr.microsoft.com/playwright:v1.41.0-focal
+FROM node:22-slim
 
-# Set working directory
-WORKDIR /app
+# Install dependencies for Chromium
+RUN apt-get update && apt-get install -y \
+    wget \
+    ca-certificates \
+    fonts-liberation \
+    libasound2 \
+    libatk-bridge2.0-0 \
+    libatk1.0-0 \
+    libcups2 \
+    libdrm2 \
+    libxkbcommon0 \
+    libxcomposite1 \
+    libxdamage1 \
+    libxrandr2 \
+    libgbm1 \
+    libpango-1.0-0 \
+    libnss3 \
+    libxshmfence1 \
+    libglib2.0-0 \
+    libgtk-3-0 \
+    --no-install-recommends \
+    && rm -rf /var/lib/apt/lists/*
 
-# Copy package files and install dependencies
-COPY package.json package-lock.json* ./
-RUN npm install
-
-# Install Playwright Chromium
+# Install Playwright and Chromium
+RUN npm install -g playwright
 RUN npx playwright install chromium
 
-# Copy the rest of the app code
+WORKDIR /app
+COPY package.json package-lock.json* ./
+RUN npm install
 COPY . .
 
-# Expose Cloud Run port
 EXPOSE 8080
-
-# Set environment variable for Cloud Run
 ENV PORT=8080
 
-# Start the Node.js app
 CMD ["node", "index.js"]
