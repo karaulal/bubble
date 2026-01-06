@@ -6,6 +6,7 @@ const path = require("path");
 const app = express();
 app.use(express.json());
 
+
 async function getBrowser() {
   if (!browser) {
     try {
@@ -30,8 +31,11 @@ async function getBrowser() {
 }
 
 app.post("/screenshot", async (req, res) => {
-  console.log("===== New Screenshot Request =====");
-  console.log("Received request body:", req.body);
+  try {
+    const browserInstance = await getBrowser();  // <-- always use this
+    const page = await browserInstance.newPage();
+    
+  }
 
   const { url } = req.body;
   if (!url) {
