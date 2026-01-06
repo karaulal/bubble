@@ -41,10 +41,8 @@ app.post("/screenshot", async (req, res) => {
     await page.goto(url, { waitUntil: "networkidle", timeout: 60000 });
     console.log("Page loaded successfully");
 
-   
-});
-// ⏱️ WAIT 7 SECONDS AFTER LOAD
-await page.waitForTimeout(7000);
+    // ⏱️ WAIT 7 SECONDS AFTER LOAD (CORRECT PLACE)
+    await page.waitForTimeout(7000);
 
     console.log("Taking screenshot (540x750)...");
     const buffer = await page.screenshot({
@@ -52,13 +50,11 @@ await page.waitForTimeout(7000);
     });
     console.log("Screenshot captured, size:", buffer.length, "bytes");
 
-    // Optional: save locally (Cloud Run filesystem is ephemeral)
     const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
     const filename = path.join(__dirname, `screenshot-${timestamp}.png`);
     fs.writeFileSync(filename, buffer);
     console.log("Screenshot saved locally as:", filename);
 
-    // Send screenshot back to client
     res.set("Content-Type", "image/png");
     res.send(buffer);
     console.log("Response sent successfully");
