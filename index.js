@@ -1,3 +1,15 @@
+browser = await chromium.launch({
+  headless: true,
+  args: [
+    "--no-sandbox",
+    "--disable-setuid-sandbox",
+    "--disable-dev-shm-usage",
+    "--disable-gpu",
+    "--single-process"
+  ]
+});
+
+
 const express = require("express");
 const { chromium } = require("playwright");
 const fs = require("fs");
