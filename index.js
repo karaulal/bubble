@@ -42,10 +42,8 @@ app.post("/screenshot", async (req, res) => {
     console.log("Page loaded successfully");
 
     // ✅ MOVED HERE — this is the ONLY change
-    await page.waitForSelector(".db-loaded", {
-  state: "attached",
-  timeout: 30000
-});
+       await page.waitForTimeout(7000);
+
 
 
     console.log("Taking screenshot (540x750)...");
